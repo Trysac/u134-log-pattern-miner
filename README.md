@@ -1,48 +1,42 @@
 # log-pattern-miner
 
-[![PyPI version](https://img.shields.io/pypi/v/trysac-log-pattern-miner)](https://pypi.org/project/trysac-log-pattern-miner/)
-[![License: MIT](https://img.shields.io/pypi/l/trysac-log-pattern-miner)](LICENSE)
-[![CI](https://github.com/Trysac/u134-log-pattern-miner/actions/workflows/ci.yml/badge.svg)](https://github.com/Trysac/u134-log-pattern-miner/actions/workflows/ci.yml)
+Online log template mining with the Drain fixed-depth tree, deterministic cluster IDs, JSON state, and a CLI that reports patterns missing from a baseline.
 
-Online log template mining with the Drain fixed-depth tree, deterministic cluster ids, JSON state and a CLI that reports patterns missing from a baseline
+## Overview
 
-## Problem
+After a deploy, engineers grep millions of log lines to find what is new, because the same message appears with thousands of different identifiers, IP addresses, and numbers. `log-pattern-miner` extracts structural log templates in linear time with fixed-depth trees, bounded memory, and zero runtime dependencies.
 
-Describe in two or three sentences the concrete problem this utility solves, who hits it, and what
-they do today without it. Replace this paragraph when the first real feature lands.
+## Installation
 
-## Install
-
-```sh
-pip install trysac-log-pattern-miner
-# or
-uv add trysac-log-pattern-miner
+```bash
+pip install log-pattern-miner
 ```
-
-Requires Python 3.10 or newer. No runtime dependencies.
 
 ## Usage
 
 ```python
-import log_pattern_miner
+from log_pattern_miner import Miner, MinerConfig
 
-# normalize() trims surrounding whitespace and lower-cases the text.
-print(log_pattern_miner.normalize("  Hello World "))  # -> "hello world"
-
-# Blank input is rejected explicitly instead of returning an empty string.
-try:
-    log_pattern_miner.normalize("   ")
-except ValueError as exc:
-    print(f"rejected: {exc}")
+miner = Miner(MinerConfig(depth=4, sim_threshold=0.4))
+m1 = miner.add("Connected to 10.0.0.1 in 35 ms")
+m2 = miner.add("Connected to 10.0.0.2 in 7 ms")
+assert m1.cluster_id == m2.cluster_id == 1
+assert m2.template == "Connected to <*> in <*> ms"
+for c in miner.clusters():
+    print(f"{c.count}x #{c.id}: {c.template}")
 ```
 
-## Documentation
+## API Summary
 
-- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/decisions/)
-- [Testing](docs/TESTING.md) and [security](docs/SECURITY.md)
-- [Project record](docs/PROJECT.md) and [stack](docs/STACK.md)
-- [Changelog](CHANGELOG.md) and [contributing guide](CONTRIBUTING.md)
+- `Miner`: Core engine. Methods: `add(line: str) -> Match`, `clusters() -> list[Cluster]`, `stats -> Stats`, `to_json() -> str`, `from_json(s: str) -> Miner`.
+- `MinerConfig`: Configuration. Validated fields: `depth` (3-10), `sim_threshold` (0.0-1.0), `max_children` (>=1), `max_clusters` (>=1), `max_line_chars` (>=1).
+- `MinerError`: Exception with codes: `invalid_config`, `invalid_state`, `input_too_large`.
+- `new_templates(current: Miner, baseline: Miner) -> list[Cluster]`.
 
-## License
+## Why not Drain3?
 
-[MIT](LICENSE) (c) 2026 Miguel Gomez
+`log-pattern-miner` provides zero runtime dependencies, strictly deterministic cluster IDs, explicit baseline diffing for deployment checks, and bounded memory using LRU eviction.
+
+## Security & Threat Model
+
+See [docs/SECURITY.md](docs/SECURITY.md).

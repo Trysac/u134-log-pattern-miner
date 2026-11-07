@@ -1,19 +1,20 @@
-# Security notes
+# Security
 
-## Threat model
+## Threat Model
 
-`trysac-log-pattern-miner` is a pure library without I/O. The main risks are:
+This utility processes untrusted log text and JSON state files. It focuses on stability and resource constraints.
 
-- **Supply chain**: a compromised dependency or CI action. Mitigation: no runtime dependencies,
-  Dependabot weekly updates, actions pinned to major versions, minimal workflow permissions.
-- **Leaked secrets**: tokens committed by mistake. Mitigation: `gitleaks` runs in the local gates
-  and in CI; `.env` files are git-ignored.
-- **Untrusted input**: callers may pass hostile strings. Mitigation: validate input and fail with
-  explicit exceptions; never `eval`, `exec` or deserialize untrusted data.
+### Defended
 
-## Publishing
+1. **Memory Exhaustion (DoS)**: 
+   - The cluster registry is bounded by `max_clusters` (default 10,000). LRU eviction ensures the memory footprint remains constant.
+   - State deserialization via `Miner.from_json` limits input string size to 50,000,000 characters to prevent memory-based DoS attacks.
+2. **Log Buffer Overflow**: 
+   - All incoming log lines are truncated to `max_line_chars` (default 10,000) before processing.
+3. **Regular Expression DoS (ReDoS)**: 
+   - Preprocessing uses anchored, non-backtracking regular expressions. They do not use nested quantifiers.
 
-Releases are published to PyPI with trusted publishing (OIDC) when available, never with a
-long-lived token stored in the repository.
+### Not Defended
 
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+- This package does not perform sanitize inputs beyond the specified masks. Log lines containing arbitrary characters are treated as tokens based on whitespace separation.
+- Standard error messages are truncated at 200 characters to prevent verbose error disclosure, but the underlying error state (e.g., malformed JSON) is exposed via the exception message.
