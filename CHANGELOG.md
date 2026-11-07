@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Implement Drain online log pattern miner with deterministic cluster IDs, JSON state persistence, bounded LRU eviction, and CLI baseline diffing.
 - Initial project structure from the factory utility template.

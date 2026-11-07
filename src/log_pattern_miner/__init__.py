@@ -1,21 +1,36 @@
-"""Online log template mining with the Drain fixed-depth tree, deterministic cluster ids, JSON state and a CLI that reports patterns missing from a baseline"""
+"""Online log template mining with the Drain fixed-depth tree algorithm.
+
+Provides deterministic cluster IDs, bounded memory, baseline comparison,
+and JSON state persistence.
+"""
 
 from __future__ import annotations
 
-__all__ = ["__version__", "normalize"]
+import logging
+
+from log_pattern_miner.miner import (
+    Cluster,
+    Match,
+    Miner,
+    MinerConfig,
+    MinerError,
+    MinerErrorCode,
+    Stats,
+    new_templates,
+)
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __version__ = "0.1.0"
 
-
-def normalize(value: str) -> str:
-    """Return ``value`` trimmed and lower-cased.
-
-    Placeholder API created by the template: replace it with the utility's real behavior.
-
-    Raises:
-        ValueError: if ``value`` is empty or only whitespace.
-    """
-    cleaned = value.strip()
-    if not cleaned:
-        raise ValueError("value must not be empty")
-    return cleaned.lower()
+__all__ = [
+    "Cluster",
+    "Match",
+    "Miner",
+    "MinerConfig",
+    "MinerError",
+    "MinerErrorCode",
+    "Stats",
+    "__version__",
+    "new_templates",
+]
