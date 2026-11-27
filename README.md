@@ -8,8 +8,10 @@ After a deploy, engineers grep millions of log lines to find what is new, becaus
 
 ## Installation
 
+Not published to PyPI yet. Install it from GitHub:
+
 ```bash
-pip install log-pattern-miner
+pip install "git+https://github.com/Trysac/u134-log-pattern-miner"
 ```
 
 ## Usage
